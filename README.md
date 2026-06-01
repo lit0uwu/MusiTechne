@@ -1,1 +1,1 @@
-![MusiTechne logo](assets/images/MusiTechne_icon.png)
+![MusiTechne logo](assets/images/MusiTechne_logo.png)
