@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Musitechne - Rhythm Game</title>
+    <!-- Подключаем стили из папки css -->
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Подключаем библиотеку Tone.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>🎹 MusiTechne</h1>
+        <p>1. Нажми кнопку "Включить звук" (требование браузера).<br>2. Играй кликами мыши или клавишами: Q, W, E, R, T.</p>
+        
+        <button id="start-audio" class="btn">Включить звук</button>
+        
+        <div class="piano" id="piano">
+            <div class="key" data-note="C4"><span class="note">C4</span><span class="btn-hint">Q</span></div>
+            <div class="key" data-note="D4"><span class="note">D4</span><span class="btn-hint">W</span></div>
+            <div class="key" data-note="E4"><span class="note">E4</span><span class="btn-hint">E</span></div>
+            <div class="key" data-note="F4"><span class="note">F4</span><span class="btn-hint">R</span></div>
+            <div class="key" data-note="G4"><span class="note">G4</span><span class="btn-hint">T</span></div>
+        </div>
+    </div>
+
+    <!-- Подключаем скрипт из папки js -->
+    <script src="js/audio.js"></script>
+</body>
+</html>
