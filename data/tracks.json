@@ -1,0 +1,22 @@
+{
+  "status": "success",
+  "version": "1.0",
+  "defaultTracks": [
+    {
+      "id": 1,
+      "title": "Jingle Bells (Short)",
+      "tempo": 120,
+      "notes": [
+        {"note": "E4", "duration": "4n", "time": "0:0:0"},
+        {"note": "E4", "duration": "4n", "time": "0:1:0"},
+        {"note": "E4", "duration": "2n", "time": "0:2:0"}
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Custom Track Template",
+      "tempo": 100,
+      "notes": []
+    }
+  ]
+}
