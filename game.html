@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Musitechne - Rhythm Game</title>
-    <!-- Подключаем отдельный CSS для игры -->
     <link rel="stylesheet" href="css/game.css">
+    <!-- Tone.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
 </head>
 <body>
@@ -13,39 +13,39 @@
     <!-- 1. Экран выбора уровней -->
     <div id="screen-level-select" class="screen active">
         <h1>Выберите трек</h1>
-        <ul id="level-list" class="level-list">
-            <!-- Сюда вставим уровни из JS -->
-        </ul>
+        <ul id="level-list" class="level-list"></ul>
         <button id="btn-back-menu" class="btn">В главное меню</button>
     </div>
 
-    <!-- 2. Игровой экран (Canvas и Интерфейс) -->
+    <!-- 2. Игровой экран -->
     <div id="screen-game" class="screen">
-        <!-- Маскот на заднем фоне (чуть тусклый, чтобы не мешал нотам) -->
         <img id="game-mascot" src="assets/characters/djkin/djkin_1.png" alt="DJ Mascot">
         
         <div class="hud">
-            <div class="score">Счет: <span id="score-display">0</span></div>
-            <div class="hp-bar-container">
-                <div id="hp-bar" class="hp-bar"></div>
+            <div id="hud-normal" style="width: 100%; display: flex; justify-content: space-between; align-items: center;">
+                <div class="score">Счет: <span id="score-display">0</span></div>
+                <div class="hp-bar-container"><div id="hp-bar" class="hp-bar"></div></div>
+                <span id="combo-display">Combo: 0</span>
             </div>
-            <span id="combo-display">Combo: 0</span>
+            
+            <div id="hud-record" style="display: none; width: 100%; justify-content: space-between; align-items: center;">
+                <div class="rec-blinker">🔴 REC (Пишем длину нот)</div>
+                <button id="btn-stop-record" class="btn-small" style="background: #ff5252;">⏹ Остановить запись</button>
+            </div>
         </div>
 
-        <!-- Здесь падают ноты -->
         <canvas id="game-canvas"></canvas>
 
-        <!-- Пианино (5 клавиш) -->
         <div class="piano-overlay" id="piano-overlay">
-            <div class="key" data-note="C4" data-lane="0">C<br>(Q)</div>
-            <div class="key" data-note="D4" data-lane="1">D<br>(W)</div>
-            <div class="key" data-note="E4" data-lane="2">E<br>(E)</div>
-            <div class="key" data-note="F4" data-lane="3">F<br>(R)</div>
-            <div class="key" data-note="G4" data-lane="4">G<br>(T)</div>
+            <div class="key" data-note="C4" data-lane="0">C<br>(Q / Й)</div>
+            <div class="key" data-note="D4" data-lane="1">D<br>(W / Ц)</div>
+            <div class="key" data-note="E4" data-lane="2">E<br>(E / У)</div>
+            <div class="key" data-note="F4" data-lane="3">F<br>(R / К)</div>
+            <div class="key" data-note="G4" data-lane="4">G<br>(T / Е)</div>
         </div>
     </div>
 
-    <!-- 3. Экран результата (Победа/Поражение) -->
+    <!-- 3. Экран результата игры -->
     <div id="screen-result" class="screen">
         <img id="result-mascot" src="" alt="Result Mascot">
         <h1 id="result-title">Результат</h1>
@@ -54,7 +54,23 @@
         <button id="btn-levels" class="btn">Выбрать другой уровень</button>
     </div>
 
-    <!-- Логика игры -->
+    <!-- 4. Настройка записи -->
+    <div id="screen-setup-record" class="screen">
+        <h1 style="color: #ffeb3b;">Режим Создателя</h1>
+        <p style="max-width: 600px; text-align: center;">Введите название и играйте! Удерживайте клавиши — программа запомнит длительность ноты (Длинные ноты станут длинными тайлами).</p>
+        <input type="text" id="rec-title" placeholder="Имя вашего хита..." style="padding: 15px; font-size: 20px; border-radius: 8px; border: none; outline: none; margin: 20px; width: 80%; max-width: 400px; text-align: center;">
+        <button id="btn-start-record" class="btn" style="background: #ffeb3b; color: black; font-weight: bold;">Записать трек 🎹</button>
+        <button id="btn-cancel-record" class="btn" style="background: #555;">Отмена</button>
+    </div>
+
+    <!-- 5. Экран сохранения -->
+    <div id="screen-save-record" class="screen">
+        <h1>Трек записан!</h1>
+        <p style="font-size: 24px;">Вы сыграли нот: <span id="rec-stats" style="color: #4CAF50; font-weight: bold;">0</span></p>
+        <button id="btn-save-db" class="btn" style="background: #4CAF50;">💾 Сохранить и Играть</button>
+        <button id="btn-discard" class="btn" style="background: #ff5252;">Удалить</button>
+    </div>
+
     <script src="js/game.js"></script>
 </body>
 </html>
