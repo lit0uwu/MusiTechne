@@ -3,29 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Musitechne - Rhythm Game</title>
-    <!-- Подключаем стили из папки css -->
+    <title>Musitechne - Main Menu</title>
     <link rel="stylesheet" href="css/style.css">
-    <!-- Подключаем библиотеку Tone.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
 </head>
 <body>
-    <div class="container">
-        <h1>🎹 MusiTechne</h1>
-        <p>1. Нажми кнопку "Включить звук" (требование браузера).<br>2. Играй кликами мыши или клавишами: Q, W, E, R, T.</p>
-        
-        <button id="start-audio" class="btn">Включить звук</button>
-        
-        <div class="piano" id="piano">
-            <div class="key" data-note="C4"><span class="note">C4</span><span class="btn-hint">Q</span></div>
-            <div class="key" data-note="D4"><span class="note">D4</span><span class="btn-hint">W</span></div>
-            <div class="key" data-note="E4"><span class="note">E4</span><span class="btn-hint">E</span></div>
-            <div class="key" data-note="F4"><span class="note">F4</span><span class="btn-hint">R</span></div>
-            <div class="key" data-note="G4"><span class="note">G4</span><span class="btn-hint">T</span></div>
-        </div>
-    </div>
+    <!-- Слой затемнения/осветления для фона -->
+    <div class="theme-overlay"></div>
 
-    <!-- Подключаем скрипт из папки js -->
-    <script src="js/audio.js"></script>
+    <!-- Кнопка смены темы (справа сверху) -->
+    <button id="theme-toggle" class="theme-btn">
+        <img src="assets/images/dark.png" id="theme-icon" alt="Toggle Theme">
+    </button>
+
+    <main class="menu-layout">
+        <!-- Левая часть: Кнопка Старт -->
+        <div class="left-section">
+            <button id="btn-start" class="start-btn">
+                <img src="assets/images/start.png" alt="Start Game">
+            </button>
+        </div>
+
+        <!-- Правая часть: Маскот и Диалоговое окно -->
+        <div class="right-section">
+            <div class="mascot-container">
+                <img src="assets/characters/djkin/djkin_hello.png" id="djkin-mascot" alt="DJ Kin">
+                
+                <div id="dialogue-box" class="dialogue-box">
+                    <!-- Заглушка для PNG окошка через background-image в CSS -->
+                    <p id="dialogue-text"></p>
+                    <span class="blinking-cursor">_</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/menu.js"></script>
 </body>
 </html>

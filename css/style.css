@@ -1,73 +1,174 @@
+/* БАЗОВЫЕ ПЕРЕМЕННЫЕ (Светлая тема по умолчанию) */
+:root {
+    --bg-image: url('../assets/images/background.png'); 
+    --overlay-color: rgba(255, 255, 255, 0.4); 
+    --text-color: #1a1a1a;
+}
+
+/* ТЕМНАЯ ТЕМА */
+[data-theme="dark"] {
+    --overlay-color: rgba(10, 10, 15, 0.7);
+    --text-color: #f0f0f0;
+}
+
+/* Автоматическая темная тема из ОС браузера */
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        --overlay-color: rgba(10, 10, 15, 0.7);
+        --text-color: #f0f0f0;
+    }
+}
+
 body {
-    background-color: #1e1e1e;
-    color: #f0f0f0;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    text-align: center;
     margin: 0;
-    padding: 20px;
+    padding: 0;
+    height: 100vh;
+    overflow: hidden; /* Запрещаем прокрутку экрана */
+    font-family: 'Segoe UI', sans-serif;
+    color: var(--text-color);
+    background-image: var(--bg-image);
+    background-size: cover;
+    background-position: center;
 }
 
-.container {
-    max-width: 800px;
-    margin: 0 auto;
+/* Динамический оверлей фона */
+.theme-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: var(--overlay-color);
+    transition: background-color 0.5s ease;
+    z-index: 1;
 }
 
-.btn {
-    background-color: #4CAF50;
+/* Кнопка смены темы */
+.theme-btn {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    background: none;
     border: none;
-    color: white;
-    padding: 15px 32px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    font-size: 16px;
-    margin: 20px 2px;
     cursor: pointer;
-    border-radius: 8px;
-    transition: 0.3s;
+    z-index: 100;
+    transition: transform 0.2s;
+}
+.theme-btn img {
+    width: 60px; /* Размер иконки на экране */
+    height: 60px;
+}
+.theme-btn:hover {
+    transform: scale(1.1);
 }
 
-.btn:hover {
-    background-color: #45a049;
+/* Главная сетка меню */
+.menu-layout {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    width: 100%;
+    height: 100vh;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 5%;
+    box-sizing: border-box;
 }
 
-.piano {
+/* Кнопка Старт */
+.left-section {
+    flex: 1;
     display: flex;
     justify-content: center;
-    gap: 12px;
-    margin-top: 40px;
+}
+.start-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.start-btn img {
+    max-width: 400px; /* Ограничиваем огромную PNG на экране */
+    height: auto;
+}
+.start-btn:hover {
+    transform: scale(1.05);
 }
 
-.key {
-    width: 60px;
-    height: 220px;
-    background: #ffffff;
-    color: #333;
-    border-radius: 0 0 8px 8px;
+/* Секция маскота */
+.right-section {
+    flex: 1;
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-end;
+    height: 100%;
+}
+.mascot-container {
+    position: relative;
+    height: 90%;
     display: flex;
     flex-direction: column;
-    align-items: center;
     justify-content: flex-end;
-    padding-bottom: 20px;
-    cursor: pointer;
-    user-select: none;
-    box-shadow: 0px 4px 10px rgba(0,0,0,0.5);
-    transition: transform 0.1s, background 0.1s;
 }
 
-.key .note {
+/* Сам Диджей */
+#djkin-mascot {
+    max-height: 85vh; /* Чтобы всегда влезал в экран */
+    width: auto;
+    object-fit: contain;
+    transform-origin: bottom center; /* Покачивание будет от ног */
+}
+
+/* Анимация покачивания (Bounce) */
+@keyframes bounceMascot {
+    0%   { transform: scaleY(1); }
+    50%  { transform: scaleY(0.97) translateY(10px); }
+    100% { transform: scaleY(1); }
+}
+.dj-bounce {
+    animation: bounceMascot 0.3s ease-out;
+}
+
+/* Окошко диалога */
+.dialogue-box {
+    position: absolute;
+    bottom: 20px; /* Прижимаем к низу (над ногами) */
+    left: -100px; /* Сдвигаем влево от маскота */
+    width: 600px; /* Размер на экране */
+    min-height: 150px;
+    
+    /* ЗДЕСЬ ПУТЬ К ТВОЕЙ PNG ДИАЛОГА */
+    background-image: url('../assets/images/dialog_bg.png'); 
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    
+    padding: 30px 40px;
+    box-sizing: border-box;
+    cursor: pointer; /* Показываем, что можно кликать */
+    z-index: 20; /* Поверх ног диджея */
+    display: flex;
+    align-items: center;
+}
+
+#dialogue-text {
+    font-size: 24px;
     font-weight: bold;
-    font-size: 1.2rem;
+    margin: 0;
+    line-height: 1.4;
+    text-shadow: 1px 1px 3px rgba(255, 255, 255, 0.5); /* Чтобы текст читался */
 }
 
-.key .btn-hint {
-    font-size: 0.8rem;
-    color: #666;
-    margin-top: 5px;
+[data-theme="dark"] #dialogue-text {
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
 }
 
-.key:active, .key.active {
-    background: #e0e0e0;
-    transform: translateY(5px);
-    box-shadow: 0px 0px 5px rgba(0,0,0,0.5);
+.blinking-cursor {
+    font-weight: bold;
+    font-size: 24px;
+    animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
 }
