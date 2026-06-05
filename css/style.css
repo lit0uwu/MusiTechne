@@ -1,17 +1,15 @@
-/* БАЗОВЫЕ ПЕРЕМЕННЫЕ */
+/* === ПЕРЕМЕННЫЕ ТЕМ === */
 :root {
     --bg-image: url('../assets/images/background.png'); 
     --overlay-color: rgba(255, 255, 255, 0.4); 
     --text-color: #1a1a1a;
 }
 
-/* ТЕМНАЯ ТЕМА */
 [data-theme="dark"] {
     --overlay-color: rgba(10, 10, 15, 0.7); 
     --text-color: #f0f0f0;
 }
 
-/* Автоматическая темная тема из ОС браузера */
 @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
         --overlay-color: rgba(10, 10, 15, 0.7);
@@ -19,138 +17,117 @@
     }
 }
 
+/* === БАЗОВЫЕ НАСТРОЙКИ СТРАНИЦЫ === */
 body {
     margin: 0;
     padding: 0;
-    /* 100dvh решает проблему с интерфейсом мобильного браузера (адресной строкой) */
-    height: 100dvh; 
-    width: 100vw;
-    overflow: hidden; /* Намертво блокируем любой скролл */
+    min-height: 100vh; /* Минимальная высота - экран, но МОЖНО скроллить вниз */
+    overflow-x: hidden; /* Строго запрещаем скролл влево-вправо */
     font-family: 'Segoe UI', sans-serif;
     color: var(--text-color);
+    
     background-image: var(--bg-image);
     background-size: cover;
     background-position: center;
-    background-repeat: no-repeat;
+    /* ФИКСИРУЕМ ФОН, чтобы он не прокручивался вместе с контентом */
+    background-attachment: fixed; 
 }
 
-/* Исправленный оверлей: теперь он fixed (намертво прибит к экрану) */
+/* === ЗАТЕМНЕНИЕ ФОНА (Не двигается при скролле) === */
 .theme-overlay {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
     background-color: var(--overlay-color);
     transition: background-color 0.5s ease;
     z-index: 1;
-    pointer-events: none; /* Пропускаем клики сквозь затемнение */
+    pointer-events: none; /* Разрешаем кликать "сквозь" затемнение на кнопки */
 }
 
-/* Кнопка смены темы */
-.theme-btn {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    z-index: 100;
-    transition: transform 0.2s;
-}
-.theme-btn img {
-    width: 50px; 
-    height: 50px;
-}
-.theme-btn:hover {
-    transform: scale(1.1);
-}
-
-/* =========================================
-   ПК ВЕРСИЯ (Desktop Layout)
-   ========================================= */
+/* === ГЛАВНЫЙ КОНТЕЙНЕР (Выстраивает всё по центру в столбик) === */
 .menu-layout {
     position: relative;
     z-index: 10;
     display: flex;
+    flex-direction: column; /* Элементы идут сверху вниз */
+    align-items: center; /* Центрируем по горизонтали */
+    padding: 20px 0;
     width: 100%;
-    height: 100%;
-    justify-content: space-between;
-    align-items: stretch;
-    box-sizing: border-box;
+    gap: 30px; /* Расстояние между блоками */
 }
 
-/* Кнопка Старт */
-.left-section {
-    flex: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+/* === 1. ЛОГОТИП === */
+.section-logo img {
+    margin-top: 2vh;
+    width: 90vw; /* Занимает 90% ширины экрана телефона */
+    max-width: 800px; /* Но на ПК не больше 800px */
+    height: auto;
+    filter: drop-shadow(0px 10px 15px rgba(0,0,0,0.5));
 }
+
+/* === 2. КНОПКА СТАРТ === */
 .start-btn {
     background: none;
     border: none;
     cursor: pointer;
-    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: transform 0.3s;
 }
 .start-btn img {
-    width: 350px; /* Контролируем размер гигантской PNG */
-    max-width: 100%;
+    width: 70vw;
+    max-width: 350px;
     height: auto;
+    filter: drop-shadow(0px 5px 10px rgba(0,0,0,0.4));
 }
-.start-btn:hover { transform: scale(1.05); }
+.start-btn:hover {
+    transform: scale(1.05); /* Легкое увеличение при наведении */
+}
 
-/* Секция маскота */
-.right-section {
-    flex: 1;
+/* === 3. ДИДЖЕЙ И ДИАЛОГ === */
+.section-mascot {
+    position: relative;
     display: flex;
-    justify-content: flex-end;
-    align-items: flex-end;
-    position: relative;
-}
-.mascot-container {
-    position: relative;
-    height: 90%;
+    flex-direction: column;
+    align-items: center;
     width: 100%;
-    display: flex;
-    justify-content: flex-end;
-    align-items: flex-end;
 }
 
-/* Сам Диджей */
 #djkin-mascot {
-    max-height: 100%;
-    max-width: 100%;
+    width: 85vw;
+    max-width: 450px;
+    height: auto;
     object-fit: contain;
     transform-origin: bottom center;
-    margin-right: 5vw;
 }
 
-/* Анимация покачивания */
+/* Анимация покачивания Диджея */
 @keyframes bounceMascot {
     0%   { transform: scaleY(1); }
-    50%  { transform: scaleY(0.97) translateY(10px); }
+    50%  { transform: scaleY(0.96) translateY(15px); }
     100% { transform: scaleY(1); }
 }
 .dj-bounce {
     animation: bounceMascot 0.3s ease-out;
 }
 
-/* Окошко диалога (На ПК оно слева от диджея) */
+/* Окошко диалога (теперь оно просто лежит "на ногах" диджея) */
 .dialogue-box {
-    position: absolute;
-    bottom: 40px;
-    left: -100px;
-    width: 500px; 
-    min-height: 150px;
+    margin-top: -60px; /* Задвигаем окошко немного вверх, поверх ног персонажа */
+    width: 95vw;
+    max-width: 600px;
+    min-height: 120px;
     background-image: url('../assets/images/dialog_bg.png'); 
     background-size: 100% 100%;
-    background-repeat: no-repeat;
     background-position: center;
-    padding: 30px 40px;
+    background-repeat: no-repeat;
+    padding: 25px 40px;
     box-sizing: border-box;
     cursor: pointer;
     z-index: 20;
     display: flex;
     align-items: center;
+    justify-content: center; /* Текст тоже по центру для красоты */
+    text-align: center;
 }
+
 #dialogue-text {
     font-size: 22px;
     font-weight: bold;
@@ -158,56 +135,39 @@ body {
     line-height: 1.4;
     text-shadow: 1px 1px 3px rgba(255, 255, 255, 0.5);
 }
-[data-theme="dark"] #dialogue-text { text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8); }
-.blinking-cursor { font-weight: bold; font-size: 22px; animation: blink 1s step-end infinite; }
+[data-theme="dark"] #dialogue-text {
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+}
+.blinking-cursor {
+    font-weight: bold;
+    font-size: 22px;
+    animation: blink 1s step-end infinite;
+}
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
-/* =========================================
-   МОБИЛЬНАЯ ВЕРСИЯ (АДАПТИВ)
-   ========================================= */
-@media (max-width: 900px) {
-    .menu-layout {
-        flex-direction: column; /* Элементы выстраиваются в колонку сверху вниз */
-        padding-top: 60px; /* Отступаем от кнопки смены темы */
-    }
+/* === 4. КНОПКА СМЕНЫ ТЕМЫ (В САМОМ НИЗУ) === */
+.section-theme {
+    margin-top: 10px;
+    margin-bottom: 40px; /* Отступ от самого низа страницы */
+}
+.theme-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+.theme-btn img {
+    width: 60px; 
+    height: 60px;
+    filter: drop-shadow(0px 2px 5px rgba(0,0,0,0.5));
+}
+.theme-btn:hover {
+    transform: scale(1.1);
+}
 
-    .left-section {
-        flex: none;
-        height: 35%; /* Кнопка занимает верхнюю часть */
-        align-items: flex-end; /* Прижимаем кнопку чуть ниже к центру */
-    }
-    
-    .start-btn img {
-        width: 250px; /* Делаем кнопку старта меньше для телефона */
-    }
-
-    .right-section {
-        flex: 1; /* Диджей занимает всё нижнее пространство */
-        justify-content: center; /* Центрируем диджея по горизонтали */
-    }
-
-    .mascot-container {
-        justify-content: center;
-    }
-    
-    #djkin-mascot {
-        margin-right: 0; /* Убираем отступ, чтобы диджей стоял ровно по центру */
-    }
-
-    /* Адаптируем окошко диалога под ширину телефона */
-    .dialogue-box {
-        left: 50%; /* Сдвигаем в центр */
-        transform: translateX(-50%); /* Точная центровка */
-        bottom: 20px;
-        width: 90vw; /* Ширина - 90% от экрана телефона */
-        min-height: 100px;
-        padding: 20px 25px;
-    }
-
-    #dialogue-text {
-        font-size: 16px; /* Уменьшаем текст, чтобы он влезал на мобилках */
-    }
-    .blinking-cursor {
-        font-size: 16px;
-    }
+/* МЕЛКАЯ ПРАВКА ДЛЯ ОЧЕНЬ УЗКИХ ЭКРАНОВ */
+@media (max-width: 400px) {
+    #dialogue-text { font-size: 16px; }
+    .blinking-cursor { font-size: 16px; }
+    .dialogue-box { padding: 15px 25px; min-height: 90px; }
 }
