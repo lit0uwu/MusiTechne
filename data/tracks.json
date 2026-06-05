@@ -4,19 +4,34 @@
   "defaultTracks": [
     {
       "id": 1,
-      "title": "Jingle Bells (Short)",
+      "title": "Jingle Bells",
       "tempo": 120,
       "notes": [
-        {"note": "E4", "duration": "4n", "time": "0:0:0"},
-        {"note": "E4", "duration": "4n", "time": "0:1:0"},
-        {"note": "E4", "duration": "2n", "time": "0:2:0"}
+        {"note": "E4", "time": 2.0},
+        {"note": "E4", "time": 2.5},
+        {"note": "E4", "time": 3.0},
+        
+        {"note": "E4", "time": 4.0},
+        {"note": "E4", "time": 4.5},
+        {"note": "E4", "time": 5.0},
+        
+        {"note": "E4", "time": 6.0},
+        {"note": "G4", "time": 6.5},
+        {"note": "C4", "time": 7.0},
+        {"note": "D4", "time": 7.5},
+        {"note": "E4", "time": 8.0}
       ]
     },
     {
       "id": 2,
-      "title": "Custom Track Template",
+      "title": "Twinkle Star (Test)",
       "tempo": 100,
-      "notes": []
+      "notes": [
+        {"note": "C4", "time": 2.0},
+        {"note": "C4", "time": 2.5},
+        {"note": "G4", "time": 3.0},
+        {"note": "G4", "time": 3.5}
+      ]
     }
   ]
 }
