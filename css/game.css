@@ -166,3 +166,35 @@ body {
     font-size: 40px;
     margin: 10px;
 }
+
+/* --- АНИМАЦИИ ДЛЯ РЕЖИМА ЗАПИСИ --- */
+.rec-blinker {
+    font-size: 24px;
+    font-weight: bold;
+    color: #ff5252;
+    animation: blinkRed 1s infinite alternate;
+    text-shadow: 0 0 10px red;
+}
+@keyframes blinkRed {
+    0% { opacity: 1; }
+    100% { opacity: 0.3; }
+}
+
+.btn-small {
+    padding: 10px 20px;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    transition: transform 0.1s;
+}
+.btn-small:hover {
+    transform: scale(1.05);
+}
+
+/* Модификация инпутов, чтобы было красиво */
+input:focus {
+    box-shadow: 0 0 15px #ffeb3b;
+}
