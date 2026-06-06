@@ -121,8 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (allDone && activeNotes.length > 0) {
-                setTimeout(() => { isPlaying = false; endGame(true); }, 1500); 
-                stopAudio();
+                setTimeout(() => { isPlaying = false; endGame(true); stopAudio(); }, 1000); 
             } else if (hp <= 0) {
                 stopAudio();
                 isPlaying = false; 
@@ -315,6 +314,10 @@ document.addEventListener('DOMContentLoaded', () => {
         await saveCustomTrack(newTrack);
         window.location.reload(); 
     };
+
+    document.getElementById("toLevelsBtn").addEventListener('click', () => {
+        window.location.reload();
+    });
 
     initMenu(); 
 });

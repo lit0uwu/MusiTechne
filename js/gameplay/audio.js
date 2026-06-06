@@ -4,7 +4,8 @@ export const notesMap = ['C4', 'D4', 'E4', 'F4', 'G4'];
 const notesTemplates = [
     ['C4', 'D4', 'E4', 'F4', 'G4'],
     ['C3', 'D3', 'E3', 'F3', 'G3'],
-    ['C5', 'D5', 'E5', 'F5', 'G5']
+    ['C5', 'D5', 'E5', 'F5', 'G5'],
+    ['A4', 'E4', 'F4', 'C5', 'B4'],
 ];
 
 export function setNotesMap(template){
