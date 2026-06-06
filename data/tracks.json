@@ -6,6 +6,7 @@
       "id": 1,
       "title": "Jingle Bells",
       "tempo": 120,
+      "notesTemplate": 0,
       "notes": [
         {"note": "E4", "time": 2.0},
         {"note": "E4", "time": 2.5},
@@ -26,6 +27,7 @@
       "id": 2,
       "title": "Twinkle Star (Test)",
       "tempo": 100,
+      "notesTemplate": 1,
       "notes": [
         {"note": "C4", "time": 2.0},
         {"note": "C4", "time": 2.5},

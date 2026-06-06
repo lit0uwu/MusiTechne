@@ -1,6 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
     
-    // === 1. ЛОГИКА ТЕМЫ (Светлая / Темная) ===
     const themeBtn = document.getElementById('theme-toggle');
     const themeIcon = document.getElementById('theme-icon');
     
@@ -91,16 +90,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-
-    // === 3. КНОПКА СТАРТ ===
     const startBtn = document.getElementById('btn-start');
     startBtn.addEventListener('click', () => {
-        // Добавляем эффект исчезновения или сразу переходим
         document.body.style.transition = "opacity 0.5s ease";
         document.body.style.opacity = "0";
         
         setTimeout(() => {
-            // В будущем мы создадим этот файл, а пока он просто перенаправит на него
             window.location.href = 'game.html'; 
         }, 500);
     });
