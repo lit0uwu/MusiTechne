@@ -39,12 +39,14 @@ body {
     max-width: 400px;
 }
 .level-list li {
+    display: flex;
     background: #2a2a3a;
     padding: 15px;
     margin-bottom: 10px;
     border-radius: 8px;
     cursor: pointer;
-    text-align: center;
+    align-items: center;
+    position: relative;
     font-size: 18px;
     transition: background 0.2s;
 }
@@ -54,6 +56,26 @@ body {
 .level-list li.create-new {
     background: #d84b22;
     font-weight: bold;
+}
+
+.title {
+    width: 100%;
+    font-size: 24px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.remove-btn {
+    border-radius: 12px;
+    position: absolute;
+    right: 15px;
+    padding: 6px;
+    background-color: #2a2a3a;
+}
+
+.pause-title {
+    font-size: 32px;
+    font-weight: 700;
 }
 
 .btn {

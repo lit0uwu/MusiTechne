@@ -8,31 +8,51 @@
       "tempo": 120,
       "notesTemplate": 0,
       "notes": [
-        {"note": "E4", "time": 2.0},
-        {"note": "E4", "time": 2.5},
-        {"note": "E4", "time": 3.0},
-        
-        {"note": "E4", "time": 4.0},
-        {"note": "E4", "time": 4.5},
-        {"note": "E4", "time": 5.0},
-        
-        {"note": "E4", "time": 6.0},
-        {"note": "G4", "time": 6.5},
-        {"note": "C4", "time": 7.0},
-        {"note": "D4", "time": 7.5},
-        {"note": "E4", "time": 8.0}
+        {"note": "C4", "time": 2.0}, {"note": "E4", "time": 2.5}, {"note": "G4", "time": 3.0}, {"note": "E4", "time": 3.5},
+        {"note": "C4", "time": 4.0}, {"note": "E4", "time": 4.5}, {"note": "G4", "time": 5.0, "duration": 0.5},
+
+        {"note": "F4", "time": 6.0}, {"note": "F4", "time": 6.5}, {"note": "F4", "time": 7.0}, {"note": "F4", "time": 7.5},
+        {"note": "F4", "time": 8.0}, {"note": "E4", "time": 8.5}, {"note": "E4", "time": 9.0}, {"note": "E4", "time": 9.5},
+
+        {"note": "D4", "time": 10.0}, {"note": "D4", "time": 10.5}, {"note": "D4", "time": 11.0}, {"note": "E4", "time": 11.5},
+        {"note": "D4", "time": 12.0}, {"note": "G4", "time": 13.0, "duration": 0.5},
+
+        {"note": "E4", "time": 14.0}, {"note": "E4", "time": 14.5}, {"note": "E4", "time": 15.0, "duration": 0.5},
+        {"note": "E4", "time": 16.0}, {"note": "E4", "time": 16.5}, {"note": "E4", "time": 17.0, "duration": 0.5},
+        {"note": "E4", "time": 18.0}, {"note": "G4", "time": 18.5}, {"note": "C4", "time": 19.0}, {"note": "D4", "time": 19.5},
+        {"note": "E4", "time": 20.0, "duration": 0.8},
+
+        {"note": "F4", "time": 21.5}, {"note": "F4", "time": 22.0}, {"note": "F4", "time": 22.5}, {"note": "F4", "time": 23.0},
+        {"note": "F4", "time": 23.5}, {"note": "E4", "time": 24.0}, {"note": "E4", "time": 24.5}, {"note": "E4", "time": 25.0},
+        {"note": "G4", "time": 25.5}, {"note": "G4", "time": 26.0}, {"note": "F4", "time": 26.5}, {"note": "D4", "time": 27.0},
+        {"note": "C4", "time": 27.5, "duration": 0.8}
       ]
     },
     {
       "id": 2,
-      "title": "Twinkle Star (Test)",
+      "title": "Twinkle Star",
       "tempo": 100,
-      "notesTemplate": 1,
+      "notesTemplate": 3,
       "notes": [
-        {"note": "C4", "time": 2.0},
-        {"note": "C4", "time": 2.5},
-        {"note": "G4", "time": 3.0},
-        {"note": "G4", "time": 3.5}
+        {"note": "A4", "time": 2.0}, {"note": "E4", "time": 2.3}, {"note": "A4", "time": 2.6}, {"note": "E4", "time": 2.9}, 
+        {"note": "A4", "time": 3.2}, {"note": "G4", "time": 3.5}, {"note": "G4", "time": 3.8, "duration": 0.4},
+        {"note": "G4", "time": 4.5}, {"note": "E4", "time": 4.8}, {"note": "G4", "time": 5.1}, {"note": "E4", "time": 5.4}, 
+        {"note": "G4", "time": 5.7}, {"note": "A4", "time": 6.0}, {"note": "A4", "time": 6.3, "duration": 0.4},
+
+        {"note": "A4", "time": 7.0}, {"note": "E4", "time": 7.3}, {"note": "A4", "time": 7.6}, {"note": "E4", "time": 7.9}, 
+        {"note": "A4", "time": 8.2}, {"note": "G4", "time": 8.5}, {"note": "G4", "time": 8.8, "duration": 0.4},
+        {"note": "G4", "time": 9.5}, {"note": "E4", "time": 9.8}, {"note": "G4", "time": 10.1}, {"note": "E4", "time": 10.4}, 
+        {"note": "G4", "time": 10.7}, {"note": "A4", "time": 11.0}, {"note": "A4", "time": 11.3, "duration": 0.4},
+
+        {"note": "A4", "time": 12.0}, {"note": "C5", "time": 12.3}, {"note": "C5", "time": 12.6}, {"note": "C5", "time": 12.9}, 
+        {"note": "C5", "time": 13.2}, {"note": "B4", "time": 13.5}, {"note": "B4", "time": 13.8, "duration": 0.4},
+        {"note": "B4", "time": 14.5}, {"note": "C5", "time": 14.8}, {"note": "C5", "time": 15.1}, {"note": "C5", "time": 15.4}, 
+        {"note": "C5", "time": 15.7}, {"note": "A4", "time": 16.0}, {"note": "A4", "time": 16.3, "duration": 0.4},
+
+        {"note": "A4", "time": 17.0}, {"note": "C5", "time": 17.3}, {"note": "C5", "time": 17.4}, {"note": "C5", "time": 17.9}, 
+        {"note": "C5", "time": 18.2}, {"note": "B4", "time": 18.5}, {"note": "B4", "time": 18.8, "duration": 0.4},
+        {"note": "B4", "time": 19.5}, {"note": "C5", "time": 19.8}, {"note": "C5", "time": 20.1}, {"note": "C5", "time": 20.4}, 
+        {"note": "C5", "time": 20.7}, {"note": "A4", "time": 21.0}, {"note": "A4", "time": 21.3, "duration": 0.6}
       ]
     }
   ]

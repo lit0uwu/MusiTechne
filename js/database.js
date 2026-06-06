@@ -21,6 +21,23 @@ export async function loadCustomTracks() {
     } catch (e) { return []; }
 }
 
+export async function removeCustomTrack(track) {
+    try {
+        const db = await initDB();
+        return new Promise((resolve, reject) => {
+            const transaction = db.transaction("custom_tracks", "readwrite");
+            const store = transaction.objectStore("custom_tracks");
+            
+            const req = store.delete(track.id);
+
+            req.onsuccess = () => resolve(true);
+            req.onerror = () => reject(req.error);
+        });
+    } catch (e) {
+        return false;
+    }
+}
+
 export async function saveCustomTrack(t) {
     const db = await initDB();
     return new Promise((resolve) => {
