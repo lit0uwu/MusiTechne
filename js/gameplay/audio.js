@@ -23,6 +23,14 @@ export async function startAudio(){
     Tone.Transport.start();
 }
 
+export function resumeAudio() {
+    Tone.Transport.toggle();
+}
+
+export function pauseAudio() {
+    Tone.Transport.pause();
+}
+
 export function stopAudio(){
     Tone.Transport.stop();
     synth.releaseAll();

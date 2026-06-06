@@ -11,9 +11,20 @@
 <body>
     <div id="screen-level-select" class="screen active">
         <h1>Выберите трек</h1>
-        <ul id="level-list" class="level-list"></ul>
+        <ul id="level-list" class="level-list">
+            <li class="create-new" id="btn-create-level">
+                [+] Создать свой трек
+            </li>
+        </ul>
         <button id="btn-back-menu" class="btn">В главное меню</button>
     </div>
+
+    <template id="levelItemTemplate">
+        <li class="level-item">
+            <div id="title" class="title">Track001</div>
+            <button id="removeBtn" class="remove-btn">❌</button>
+        </li>
+    </template>
 
     <!-- 2. Игровой экран -->
     <div id="screen-game" class="screen">
@@ -23,7 +34,7 @@
             <div id="hud-normal" style="width: 100%; display: flex; justify-content: space-between; align-items: center;">
                 <div class="score">Счет: <span id="score-display">0</span></div>
                 <div class="hp-bar-container"><div id="hp-bar" class="hp-bar"></div></div>
-                <button id="toLevelsBtn" style="padding: 12px; font-size: 20px; font-weight: 800;">К уровням</button>
+                <button id="pauseBtn" class="btn">Пауза</button>
                 <span id="combo-display">Combo: 0</span>
             </div>
             
@@ -44,13 +55,19 @@
         </div>
     </div>
 
-    <!-- 3. Экран результата игры -->
     <div id="screen-result" class="screen">
         <img id="result-mascot" src="" alt="Result Mascot">
         <h1 id="result-title">Результат</h1>
         <p>Итоговый счет: <span id="result-score">0</span></p>
         <button id="btn-retry" class="btn">Играть снова</button>
         <button id="btn-levels" class="btn">Выбрать другой уровень</button>
+    </div>
+
+    <div id="screen-pause" class="screen">
+        <div class="pause-title">Пауза</div>
+        <button id="resume-btn" class="btn">Продолжить</button>
+        <button id="replay-btn" class="btn">Заново</button>
+        <button id="menu-btn" class="btn">В меню</button>
     </div>
 
     <!-- 4. Настройка записи -->

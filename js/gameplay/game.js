@@ -1,7 +1,7 @@
-import { initDB, getTracks, loadCustomTracks, saveCustomTrack } from "../database.js";
-import { keyMap, fallSpeedBase, hitTolerance, songStartDelay } from "./config.js";
+import { initDB, getTracks, loadCustomTracks, saveCustomTrack, removeCustomTrack } from "../database.js";
+import { keyMap, fallSpeedBase, hitTolerance, songStartDelay, missCost, skipCost } from "./config.js";
 import { drawRect, drawLine, drawRoads,  } from "./render.js";
-import { synth, startAudio, notesMap, stopAudio, playNote, stopNote, getAudioTime, setNotesMap } from "./audio.js";
+import { synth, startAudio, notesMap, stopAudio, playNote, stopNote, getAudioTime, setNotesMap, resumeAudio, pauseAudio } from "./audio.js";
 
 document.addEventListener('DOMContentLoaded', () => {
     const screens = {
@@ -9,7 +9,8 @@ document.addEventListener('DOMContentLoaded', () => {
         game: document.getElementById('screen-game'),
         result: document.getElementById('screen-result'),
         setupRecord: document.getElementById('screen-setup-record'),
-        saveRecord: document.getElementById('screen-save-record')
+        saveRecord: document.getElementById('screen-save-record'),
+        pause: document.getElementById("screen-pause")
     };
 
     const mascotGame = document.getElementById('game-mascot');
@@ -39,29 +40,53 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function initMenu() {
         const levelList = document.getElementById('level-list');
-        levelList.innerHTML = `<li class="create-new" id="btn-create-level">[+] Создать свой трек (Режим Записи)</li>`;
-        
+        const template = document.getElementById("levelItemTemplate");
         const customTracks = await loadCustomTracks();
         customTracks.forEach(track => {
-            const li = document.createElement('li');
-            li.innerHTML = `⭐ <b>${track.title}</b>`;
-            li.style.borderLeft = "5px solid #ffeb3b";
-            li.onclick = () => startGame(track);
-            levelList.appendChild(li);
+
+            const clone = template.content.cloneNode(true);
+            const trackElement = clone.firstElementChild;
+
+            const title = clone.querySelector(".title");
+            const removeBtn = clone.querySelector(".remove-btn");
+
+            title.textContent = `⭐️ ${track.title}`;
+            removeBtn.textContent = '❌';
+            
+            removeBtn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                await removeCustomTrack(track);
+                trackElement.remove();
+            });
+
+            trackElement.addEventListener('click', () => {
+                startGame(track);
+                console.log("start");
+            });
+            levelList.appendChild(clone);
         });
 
         const tracks = await getTracks();
 
         tracks.forEach(track => {
-            const li = document.createElement('li');
-            li.textContent = `${track.id}. ${track.title}`;
-            li.onclick = () => startGame(track);
-            levelList.appendChild(li);
+            const clone = template.content.cloneNode(true);
+            const trackElement = clone.firstElementChild;
+
+            const title = clone.querySelector(".title");
+            const removeBtn = clone.querySelector(".remove-btn");
+            removeBtn.remove();
+
+            title.textContent = `${track.id}. ${track.title}`;
+
+            trackElement.addEventListener('click', () => {
+                startGame(track);
+                console.log("start");
+            });
+            levelList.appendChild(clone);
         });
 
         document.getElementById('btn-create-level').onclick = () => {
-            screens.levelSelect.classList.remove('active');
-            screens.setupRecord.classList.add('active');
+            switchScreen(screens.setupRecord);
             document.getElementById('rec-title').focus();
         };
     }
@@ -76,13 +101,12 @@ document.addEventListener('DOMContentLoaded', () => {
         activeNotes = track.notes.map(n => {
             const numTime = typeof n.time === 'string' ? Tone.Time(n.time).toSeconds() : Number(n.time);
             const laneIndex = notesMap.indexOf(n.note) !== -1 ? notesMap.indexOf(n.note) : 0;
-            const duration = n.duration ? Number(n.duration) : 0.2; // По умолчанию нота короткая (0.2s)
+            const duration = n.duration ? Number(n.duration) : 0.2;
             
             return { lane: laneIndex, time: numTime + songStartDelay, duration: duration, hit: false, missed: false };
         });
 
-        Object.values(screens).forEach(s => s.classList.remove('active'));
-        screens.game.classList.add('active');
+        switchScreen(screens.game);
         document.getElementById('hud-normal').style.display = "flex";
         document.getElementById('hud-record').style.display = "none";
         
@@ -139,7 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const noteHeight = Math.max(30, note.duration * fallSpeedBase);
                 const y = targetY - (currentTime - note.time) * fallSpeedBase;
             
-                drawRect(ctx, note, noteHeight, laneWidth, y);
+                drawRect(ctx, note, noteHeight, laneWidth, y + noteHeight);
             
                 if (y + noteHeight < -50) {
                     flyingNotes.splice(i, 1);
@@ -167,7 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     noteFound = true; break; 
                 }
             }
-            if (!noteFound) { combo = 0; hp -= 5; updateHUD(); }
+            if (!noteFound) { combo = 0; hp -= missCost; updateHUD(); }
         } 
         else if (isRecording) {
             recordActiveKeys[laneIndex] = getAudioTime();
@@ -187,7 +211,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         stopNote(laneIndex);
         
-        // Возвращаем маскота, если ни одна клавиша больше не зажата
         if (Object.keys(gameActiveKeys).length === 0) {
             mascotGame.src = 'assets/characters/djkin/djkin_1.png';
         }
@@ -196,7 +219,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isRecording && recordActiveKeys[laneIndex] !== undefined) {
             const startT = recordActiveKeys[laneIndex];
             const endT = getAudioTime();
-            const duration = Math.max(0.1, endT - startT); // Минимум 0.1 секунды длительность
+            const duration = Math.max(0.1, endT - startT);
             
             recordedNotes.push({
                 note: notesMap[laneIndex],
@@ -216,7 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function handleMiss() { combo = 0; hp -= 15; updateHUD(); }
+    function handleMiss() { combo = 0; hp -= skipCost; updateHUD(); }
     function updateHUD() {
         scoreDisplay.textContent = score; comboDisplay.textContent = `Combo: ${combo}`;
         hpBar.style.width = `${Math.max(0, hp)}%`; hpBar.style.background = hp < 30 ? '#ff5252' : '#4CAF50';
@@ -252,9 +275,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    function switchScreen(screen){
+        Object.values(screens).forEach(sc => {
+            if (sc == screen) sc.classList.add('active');
+            else sc.classList.remove('active');
+        })
+    }
+
     function endGame(isVictory) {
-        screens.game.classList.remove('active'); 
-        screens.result.classList.add('active');
+        switchScreen(screens.result);
         document.getElementById('result-title').textContent = isVictory ? "Уровень Пройден!" : "Провал...";
         document.getElementById('result-title').style.color = isVictory ? "#4caf50" : "#ff5252";
         document.getElementById('result-score').textContent = score;
@@ -280,8 +309,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         await startAudio();
 
-        Object.values(screens).forEach(s => s.classList.remove('active'));
-        screens.game.classList.add('active');
+        switchScreen(screens.game);
         document.getElementById('hud-normal').style.display = "none";
         document.getElementById('hud-record').style.display = "flex";
         
@@ -293,8 +321,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-stop-record').onclick = () => {
         isRecording = false;
         stopAudio();
-        screens.game.classList.remove('active');
-        screens.saveRecord.classList.add('active');
+        switchScreen(screens.saveRecord);
         document.getElementById('rec-stats').textContent = recordedNotes.length;
     };
 
@@ -315,8 +342,23 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.reload(); 
     };
 
-    document.getElementById("toLevelsBtn").addEventListener('click', () => {
-        window.location.reload();
+    document.getElementById("pauseBtn").addEventListener('click', () => {
+        switchScreen(screens.pause);
+        pauseAudio();
+    });
+    
+    document.getElementById("resume-btn").addEventListener('click', () => {
+        switchScreen(screens.game);
+        resumeAudio();
+    });
+    
+    document.getElementById("replay-btn").addEventListener('click', async () => {
+        await startGame(currentTrack);
+    });
+
+    document.getElementById("menu-btn").addEventListener('click', () => {
+        stopAudio();
+        switchScreen(screens.levelSelect);
     });
 
     initMenu(); 
