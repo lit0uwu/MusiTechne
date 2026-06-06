@@ -1,5 +1,9 @@
+import { initDB, getTracks, loadCustomTracks, saveCustomTrack } from "../database.js";
+import { keyMap, fallSpeedBase, hitTolerance, songStartDelay } from "./config.js";
+import { drawRect, drawLine, drawRoads,  } from "./render.js";
+import { synth, startAudio, notesMap, stopAudio, playNote, stopNote, getAudioTime, setNotesMap } from "./audio.js";
+
 document.addEventListener('DOMContentLoaded', () => {
-    // --- UI Экраны ---
     const screens = {
         levelSelect: document.getElementById('screen-level-select'),
         game: document.getElementById('screen-game'),
@@ -14,32 +18,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const scoreDisplay = document.getElementById('score-display');
     const comboDisplay = document.getElementById('combo-display');
     
-    // --- ПЕРЕМЕННЫЕ ИГРЫ ---
     let score = 0; let combo = 0; let hp = 100;
     let isPlaying = false; 
     let currentTrack = null; let activeNotes = []; 
     
-    const hitTolerance = 0.3; 
-    const fallSpeedBase = 500; 
-    const songStartDelay = 2; 
-
-    // --- ПЕРЕМЕННЫЕ РЕДАКТОРА ---
     let isRecording = false;
     let recordedNotes = [];
     let flyingNotes = [];
-    let recordActiveKeys = {}; // Хранит время начала нажатия { дорожка: время_старта }
-    let gameActiveKeys = {}; // Блокировка авто-повтора зажатия в игре
-
-    // 1. ПОЛИСИНТЕЗАТОР: Позволяет удерживать звук и играть аккорды!
-    const synth = new Tone.PolySynth(Tone.Synth).toDestination();
-    
-    // 2. РУССКАЯ И АНГЛИЙСКАЯ РАСКЛАДКИ ВМЕСТЕ
-    const keyMap = { 
-        'q': 0, 'w': 1, 'e': 2, 'r': 3, 't': 4,
-        'й': 0, 'ц': 1, 'у': 2, 'к': 3, 'е': 4 
-    };
-    const notesMap = ['C4', 'D4', 'E4', 'F4', 'G4'];
-    const colors = ['#ff5252', '#ffeb3b', '#4caf50', '#2196f3', '#9c27b0'];
+    let recordActiveKeys = {};
+    let gameActiveKeys = {};
 
     const canvas = document.getElementById('game-canvas');
     const ctx = canvas.getContext('2d');
@@ -50,46 +37,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     window.addEventListener('resize', resizeCanvas);
 
-
-    // ==========================================
-    // MODULE: IndexedDB 
-    // ==========================================
-    function initDB() {
-        return new Promise((resolve) => {
-            const request = indexedDB.open("MusitechneDB", 1);
-            request.onupgradeneeded = (e) => {
-                const db = e.target.result;
-                if (!db.objectStoreNames.contains("custom_tracks")) {
-                    db.createObjectStore("custom_tracks", { keyPath: "id" });
-                }
-            };
-            request.onsuccess = (e) => resolve(e.target.result);
-        });
-    }
-
-    async function loadCustomTracks() {
-        try {
-            const db = await initDB();
-            return new Promise((resolve) => {
-                const req = db.transaction("custom_tracks", "readonly").objectStore("custom_tracks").getAll();
-                req.onsuccess = () => resolve(req.result || []);
-            });
-        } catch (e) { return []; }
-    }
-
-    async function saveCustomTrack(t) {
-        const db = await initDB();
-        return new Promise((resolve) => {
-            const tx = db.transaction("custom_tracks", "readwrite");
-            tx.objectStore("custom_tracks").put(t);
-            tx.oncomplete = () => resolve();
-        });
-    }
-
-
-    // ==========================================
-    // 1. МЕНЮ
-    // ==========================================
     async function initMenu() {
         const levelList = document.getElementById('level-list');
         levelList.innerHTML = `<li class="create-new" id="btn-create-level">[+] Создать свой трек (Режим Записи)</li>`;
@@ -103,18 +50,12 @@ document.addEventListener('DOMContentLoaded', () => {
             levelList.appendChild(li);
         });
 
-        fetch('data/tracks.json').then(res => res.json()).then(data => {
-            data.defaultTracks.forEach((t) => {
-                if (t.notes.length > 0) {
-                    const li = document.createElement('li');
-                    li.textContent = `${t.id}. ${t.title}`;
-                    li.onclick = () => startGame(t);
-                    levelList.appendChild(li);
-                }
-            });
-        }).catch(() => {
-            const li = document.createElement('li'); li.textContent = "1. Тестовая мелодия";
-            li.onclick = () => startGame({id: 1, title: "Test", notes: [{note: 'C4', time: 1}, {note: 'E4', time: 2}] });
+        const tracks = await getTracks();
+
+        tracks.forEach(track => {
+            const li = document.createElement('li');
+            li.textContent = `${track.id}. ${track.title}`;
+            li.onclick = () => startGame(track);
             levelList.appendChild(li);
         });
 
@@ -125,15 +66,13 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-
-    // ==========================================
-    // 2. ИГРОВОЙ ЦИКЛ (С ОТРИСОВКОЙ ДЛИННЫХ НОТ)
-    // ==========================================
     async function startGame(track) {
-        await Tone.start(); 
+        await startAudio();
         currentTrack = track;
         score = 0; hp = 100; combo = 0; updateHUD();
         
+        setNotesMap(Number(track.notesTemplate));
+
         activeNotes = track.notes.map(n => {
             const numTime = typeof n.time === 'string' ? Tone.Time(n.time).toSeconds() : Number(n.time);
             const laneIndex = notesMap.indexOf(n.note) !== -1 ? notesMap.indexOf(n.note) : 0;
@@ -148,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('hud-record').style.display = "none";
         
         resizeCanvas(); mascotGame.src = 'assets/characters/djkin/djkin_1.png';
-        Tone.Transport.stop(); Tone.Transport.position = 0; Tone.Transport.start();
+        
         isPlaying = true;
         requestAnimationFrame(gameLoop);
     }
@@ -157,81 +96,70 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!isPlaying && !isRecording) return;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        const currentTime = Tone.Transport.seconds;
+        const currentTime = getAudioTime();
         const targetY = canvas.height - 40; 
-        const laneWidth = canvas.width / 5;
+        const laneWidth = canvas.width / notesMap.length;
 
-        // Полосы дорожек
-        for (let i = 1; i < 5; i++) {
-            ctx.beginPath(); ctx.moveTo(i * laneWidth, 0); ctx.lineTo(i * laneWidth, canvas.height);
-            ctx.strokeStyle = "rgba(255, 255, 255, 0.1)"; ctx.lineWidth = 2; ctx.stroke();
-        }
+        drawRoads(ctx, canvas, laneWidth);
 
         if (isPlaying) {
-            ctx.beginPath(); ctx.moveTo(0, targetY); ctx.lineTo(canvas.width, targetY);
-            ctx.strokeStyle = "rgba(255, 255, 255, 0.8)"; ctx.lineWidth = 6; ctx.stroke();
+            drawLine(ctx, canvas, targetY);
 
             let allDone = true;
             activeNotes.forEach(note => {
                 if (note.hit || note.missed) return;
                 allDone = false; 
-
-                // Высчитываем высоту ноты от ее длительности (минимум 30px для кликабельности)
                 const noteHeight = Math.max(30, note.duration * fallSpeedBase);
-                
-                // y - это координата НАЧАЛА ноты (ее нижний край, бьющий по TargetLine)
                 const y = targetY - (note.time - currentTime) * fallSpeedBase;
-
-                // Если ВЕРХНИЙ конец ноты ушел глубоко за экран
                 if (y - noteHeight > canvas.height + 50) { 
                     note.missed = true; handleMiss(); 
                 }
 
                 if (y > -100 && y - noteHeight < canvas.height + 100) {
-                    ctx.fillStyle = colors[note.lane];
-                    // Рисуем прямоугольник: он устремляется ВВЕРХ от точки y
-                    ctx.fillRect(note.lane * laneWidth + 10, y - noteHeight, laneWidth - 20, noteHeight);
-                    ctx.strokeStyle = "rgba(255, 255, 255, 0.8)"; ctx.lineWidth = 2;
-                    ctx.strokeRect(note.lane * laneWidth + 10, y - noteHeight, laneWidth - 20, noteHeight);
+                    drawRect(ctx, note, noteHeight, laneWidth, y);
                 }
             });
 
             if (allDone && activeNotes.length > 0) {
-                isPlaying = false; setTimeout(() => endGame(true), 1500); 
+                setTimeout(() => { isPlaying = false; endGame(true); }, 1500); 
+                stopAudio();
             } else if (hp <= 0) {
-                isPlaying = false; endGame(false);
-            } else { requestAnimationFrame(gameLoop); }
+                stopAudio();
+                isPlaying = false; 
+                endGame(false);
+            }
         }
         
         if (isRecording) {
             for (let i = flyingNotes.length - 1; i >= 0; i--) {
                 let note = flyingNotes[i];
-                note.y -= 15; 
-                ctx.fillStyle = colors[note.lane];
-                ctx.globalAlpha = note.y / canvas.height;
-                ctx.fillRect(note.lane * laneWidth + 10, note.y, laneWidth - 20, 30);
-                ctx.globalAlpha = 1.0;
-                if (note.y < 0) flyingNotes.splice(i, 1);
+                if (note.isHolding) {
+                    note.duration = currentTime - note.time;
+                }
+            
+                const noteHeight = Math.max(30, note.duration * fallSpeedBase);
+                const y = targetY - (currentTime - note.time) * fallSpeedBase;
+            
+                drawRect(ctx, note, noteHeight, laneWidth, y);
+            
+                if (y + noteHeight < -50) {
+                    flyingNotes.splice(i, 1);
+                }
             }
-            requestAnimationFrame(gameLoop);
         }
+        requestAnimationFrame(gameLoop);
     }
 
-
-    // ==========================================
-    // 3. ОБРАБОТЧИКИ НАЖАТИЯ И ОТПУСКАНИЯ (ДЛИТЕЛЬНОСТЬ)
-    // ==========================================
     function handleInputDown(laneIndex) {
-        if (gameActiveKeys[laneIndex]) return; // Игнорируем автоповтор зажатой клавиши
+        if (gameActiveKeys[laneIndex] || (!isPlaying && !isRecording)) return;
         gameActiveKeys[laneIndex] = true;
 
-        // Включаем звук (он не кончится, пока не вызовем Release)
-        synth.triggerAttack(notesMap[laneIndex]);
+        playNote(laneIndex);
+
         mascotGame.src = 'assets/characters/djkin/djkin_2.png';
+        const currentTime = getAudioTime();
 
         if (isPlaying) {
-            // Проверка попадания ритм-игры
-            const currentTime = Tone.Transport.seconds;
             let noteFound = false;
             for (let i = 0; i < activeNotes.length; i++) {
                 let note = activeNotes[i];
@@ -243,18 +171,22 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!noteFound) { combo = 0; hp -= 5; updateHUD(); }
         } 
         else if (isRecording) {
-            // РЕДАКТОР: Запоминаем время, когда нота начала звучать
-            recordActiveKeys[laneIndex] = Tone.Transport.seconds;
-            flyingNotes.push({ lane: laneIndex, y: canvas.height }); 
+            recordActiveKeys[laneIndex] = getAudioTime();
+
+            flyingNotes.push({ 
+                lane: laneIndex, 
+                time: currentTime,
+                duration: 0,
+                isHolding: true
+            }); 
         }
     }
 
     function handleInputUp(laneIndex) {
-        if (!gameActiveKeys[laneIndex]) return;
+        if (!gameActiveKeys[laneIndex] || (!isPlaying && !isRecording)) return;
         delete gameActiveKeys[laneIndex];
 
-        // Останавливаем звук полисинтезатора
-        synth.triggerRelease(notesMap[laneIndex]);
+        stopNote(laneIndex);
         
         // Возвращаем маскота, если ни одна клавиша больше не зажата
         if (Object.keys(gameActiveKeys).length === 0) {
@@ -264,7 +196,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // РЕДАКТОР: Завершение и сохранение длительности
         if (isRecording && recordActiveKeys[laneIndex] !== undefined) {
             const startT = recordActiveKeys[laneIndex];
-            const endT = Tone.Transport.seconds;
+            const endT = getAudioTime();
             const duration = Math.max(0.1, endT - startT); // Минимум 0.1 секунды длительность
             
             recordedNotes.push({
@@ -274,9 +206,14 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             delete recordActiveKeys[laneIndex];
             
-            // Чтобы показать статус
-            const element = document.getElementById('hud-record').querySelector('.rec-blinker');
-            element.textContent = `🔴 ЗАПИСЬ (Нот: ${recordedNotes.length})`;
+            const flyingNote = flyingNotes.find(n => n.lane === laneIndex && n.time === startT);
+            if (flyingNote) {
+                flyingNote.duration = duration;
+                flyingNote.isHolding = false;
+            }
+
+            const recordInd = document.getElementById('hud-record').querySelector('.rec-blinker');
+            recordInd.textContent = `🔴 ЗАПИСЬ (Нот: ${recordedNotes.length})`;
         }
     }
 
@@ -286,7 +223,6 @@ document.addEventListener('DOMContentLoaded', () => {
         hpBar.style.width = `${Math.max(0, hp)}%`; hpBar.style.background = hp < 30 ? '#ff5252' : '#4CAF50';
     }
 
-    // --- КЛАВИАТУРА И МЫШЬ (DOWN / UP) ---
     document.addEventListener('keydown', (e) => {
         if (e.target.tagName === 'INPUT' || e.repeat) return; 
         const lane = keyMap[e.key.toLowerCase()];
@@ -317,16 +253,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-
-    // ==========================================
-    // 4. ЭКРАНЫ ПЕРЕХОДОВ
-    // ==========================================
     function endGame(isVictory) {
-        Tone.Transport.stop();
-        // Принудительно отпускаем все звуки
-        synth.releaseAll();
-        
-        screens.game.classList.remove('active'); screens.result.classList.add('active');
+        screens.game.classList.remove('active'); 
+        screens.result.classList.add('active');
         document.getElementById('result-title').textContent = isVictory ? "Уровень Пройден!" : "Провал...";
         document.getElementById('result-title').style.color = isVictory ? "#4caf50" : "#ff5252";
         document.getElementById('result-score').textContent = score;
@@ -337,32 +266,34 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-retry').onclick = () => startGame(currentTrack);
     document.getElementById('btn-levels').onclick = () => window.location.reload();
 
-
-    // --- ЛОГИКА РЕДАКТОРА ---
     document.getElementById('btn-cancel-record').onclick = () => window.location.reload();
     
     document.getElementById('btn-start-record').onclick = async () => {
         const inputTitle = document.getElementById('rec-title').value;
+        const notesSelect = document.getElementById('notesTemplate');
+        const selectedNotesTemplate = Number(notesSelect.value); 
+
+        setNotesMap(selectedNotesTemplate);
+
         if (!inputTitle.trim()) { alert("Введите название трека!"); return; }
         
-        await Tone.start();
         recordedNotes = []; flyingNotes = []; recordActiveKeys = {};
         
+        await startAudio();
+
         Object.values(screens).forEach(s => s.classList.remove('active'));
         screens.game.classList.add('active');
         document.getElementById('hud-normal').style.display = "none";
         document.getElementById('hud-record').style.display = "flex";
         
         resizeCanvas(); mascotGame.src = 'assets/characters/djkin/djkin_1.png';
-        Tone.Transport.stop(); Tone.Transport.position = 0; Tone.Transport.start();
         isRecording = true;
         requestAnimationFrame(gameLoop);
     };
 
     document.getElementById('btn-stop-record').onclick = () => {
         isRecording = false;
-        Tone.Transport.stop();
-        synth.releaseAll(); // Глушим звук
+        stopAudio();
         screens.game.classList.remove('active');
         screens.saveRecord.classList.add('active');
         document.getElementById('rec-stats').textContent = recordedNotes.length;
@@ -372,11 +303,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('btn-save-db').onclick = async () => {
         if (recordedNotes.length === 0) { alert("Вы не нажали ни одной ноты!"); return; }
+        const notesSelect = document.getElementById('notesTemplate');
+        const selectedNotesTemplate = Number(notesSelect.value); 
         const newTrack = {
             id: "track_" + Date.now(),
             title: document.getElementById('rec-title').value,
             tempo: 120,
-            notes: recordedNotes
+            notes: recordedNotes,
+            notesTemplate: selectedNotesTemplate
         };
         await saveCustomTrack(newTrack);
         window.location.reload(); 
