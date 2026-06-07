@@ -4,6 +4,22 @@ import { drawRect, drawLine, drawRoads,  } from "./render.js";
 import { synth, startAudio, notesMap, stopAudio, playNote, stopNote, getAudioTime, setNotesMap, resumeAudio, pauseAudio } from "./audio.js";
 
 document.addEventListener('DOMContentLoaded', () => {
+
+    // ФУЛ КОМБА
+    const perfectSoundEffect = new Audio('assets/sounds/sss-dmc-v.mp3');
+    perfectSoundEffect.volume = 0.5;
+    let isPerfectRun = true; 
+
+    // Звук при поражении
+    const loseSoundEffect = new Audio('assets/sounds/cat-laugh-meme-1.mp3');
+    loseSoundEffect.volume = 0.1;
+
+    // Массив для хранения летящих очков
+    let floatingTexts = [];
+
+    //  прозрачность бокового свечения
+    let sideGlowAlpha = 0;
+
     const screens = {
         levelSelect: document.getElementById('screen-level-select'),
         game: document.getElementById('screen-game'),
@@ -43,10 +59,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const template = document.getElementById("levelItemTemplate");
         const customTracks = await loadCustomTracks();
         customTracks.forEach(track => {
-
             const clone = template.content.cloneNode(true);
             const trackElement = clone.firstElementChild;
-
             const title = clone.querySelector(".title");
             const removeBtn = clone.querySelector(".remove-btn");
 
@@ -67,11 +81,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         const tracks = await getTracks();
-
         tracks.forEach(track => {
             const clone = template.content.cloneNode(true);
             const trackElement = clone.firstElementChild;
-
             const title = clone.querySelector(".title");
             const removeBtn = clone.querySelector(".remove-btn");
             removeBtn.remove();
@@ -96,6 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
         currentTrack = track;
         score = 0; hp = 100; combo = 0; updateHUD();
         
+        isPerfectRun = true;
         setNotesMap(Number(track.notesTemplate));
 
         activeNotes = track.notes.map(n => {
@@ -170,6 +183,46 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         }
+
+        // Отрисовка свечения по бокам экрана
+        if (isPlaying && sideGlowAlpha > 0) {
+            ctx.save();
+            const glowWidth = 80; 
+
+            const leftGrad = ctx.createLinearGradient(0, 0, glowWidth, 0);
+            leftGrad.addColorStop(0, `rgba(76, 175, 80, ${sideGlowAlpha})`); 
+            leftGrad.addColorStop(1, 'rgba(76, 175, 80, 0)');               
+            ctx.fillStyle = leftGrad;
+            ctx.fillRect(0, 0, glowWidth, canvas.height);
+
+            const rightGrad = ctx.createLinearGradient(canvas.width, 0, canvas.width - glowWidth, 0);
+            rightGrad.addColorStop(0, `rgba(76, 175, 80, ${sideGlowAlpha})`);
+            rightGrad.addColorStop(1, 'rgba(76, 175, 80, 0)');
+            ctx.fillStyle = rightGrad;
+            ctx.fillRect(canvas.width - glowWidth, 0, glowWidth, canvas.height);
+
+            ctx.restore();
+            sideGlowAlpha -= 0.04; 
+        }
+
+        // Обновление, отрисовка и удаление всплывающего текста очков
+        ctx.save();
+        ctx.font = "bold 24px Arial";
+        ctx.textAlign = "center";
+        for (let i = floatingTexts.length - 1; i >= 0; i--) {
+            let ft = floatingTexts[i];
+            ctx.fillStyle = `rgba(76, 175, 80, ${ft.alpha})`; 
+            ctx.fillText(ft.text, ft.x, ft.y);
+            
+            ft.y -= ft.speedY; 
+            ft.alpha -= 0.025; 
+            
+            if (ft.alpha <= 0) {
+                floatingTexts.splice(i, 1); 
+            }
+        }
+        ctx.restore();
+
         requestAnimationFrame(gameLoop);
     }
 
@@ -188,10 +241,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 let note = activeNotes[i];
                 if (!note.hit && !note.missed && note.lane === laneIndex && Math.abs(note.time - currentTime) <= hitTolerance) {
                     note.hit = true; combo++; score += 10 + combo * 2; hp = Math.min(100, hp + 3); updateHUD();
+                    
+                    const soundClone = hitSoundEffect.cloneNode();
+                    soundClone.play().catch(e => console.log("Audio play blocked."));
+
+                    const currentLaneWidth = canvas.width / notesMap.length;
+                    const textX = laneIndex * currentLaneWidth + currentLaneWidth / 2;
+                    const textY = canvas.height - 70; 
+                    
+                    floatingTexts.push({
+                        text: `+${10 + combo * 2}`,
+                        x: textX,
+                        y: textY,
+                        alpha: 1,
+                        speedY: 1.5 
+                    });
+
+                    sideGlowAlpha = 0.5; 
+
                     noteFound = true; break; 
                 }
             }
-            if (!noteFound) { combo = 0; hp -= missCost; updateHUD(); }
+            if (!noteFound) { 
+                combo = 0; hp -= missCost; updateHUD(); 
+                isPerfectRun = false;
+            }
         } 
         else if (isRecording) {
             recordActiveKeys[laneIndex] = getAudioTime();
@@ -215,7 +289,6 @@ document.addEventListener('DOMContentLoaded', () => {
             mascotGame.src = 'assets/characters/djkin/djkin_1.png';
         }
 
-        // РЕДАКТОР: Завершение и сохранение длительности
         if (isRecording && recordActiveKeys[laneIndex] !== undefined) {
             const startT = recordActiveKeys[laneIndex];
             const endT = getAudioTime();
@@ -239,7 +312,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function handleMiss() { combo = 0; hp -= skipCost; updateHUD(); }
+    function handleMiss() { 
+        combo = 0; hp -= skipCost; updateHUD(); 
+        isPerfectRun = false;
+    }
+    
     function updateHUD() {
         scoreDisplay.textContent = score; comboDisplay.textContent = `Combo: ${combo}`;
         hpBar.style.width = `${Math.max(0, hp)}%`; hpBar.style.background = hp < 30 ? '#ff5252' : '#4CAF50';
@@ -288,12 +365,21 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('result-title').style.color = isVictory ? "#4caf50" : "#ff5252";
         document.getElementById('result-score').textContent = score;
         mascotResult.src = isVictory ? 'assets/characters/djkin/djkin_happy.png' : 'assets/characters/djkin/djkin_sad.png';
+
+        if (isVictory && isPerfectRun) {
+            perfectSoundEffect.play().catch(e => console.log("Perfect sound blocked."));
+            document.getElementById('result-title').textContent = "💥 ИДЕАЛЬНО! FULL COMBO! 💥";
+            document.getElementById('result-title').style.color = "#ffeb3b"; 
+        }
+        
+        if (!isVictory) {
+            loseSoundEffect.play().catch(e => console.log("Lose sound blocked or file missing."));
+        }
     }
 
     document.getElementById('btn-back-menu').onclick = () => window.location.href = 'index.html';
     document.getElementById('btn-retry').onclick = () => startGame(currentTrack);
     document.getElementById('btn-levels').onclick = () => window.location.reload();
-
     document.getElementById('btn-cancel-record').onclick = () => window.location.reload();
     
     document.getElementById('btn-start-record').onclick = async () => {
@@ -304,9 +390,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setNotesMap(selectedNotesTemplate);
 
         if (!inputTitle.trim()) { alert("Введите название трека!"); return; }
-        
         recordedNotes = []; flyingNotes = []; recordActiveKeys = {};
-        
         await startAudio();
 
         switchScreen(screens.game);
