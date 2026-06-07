@@ -1,4 +1,5 @@
-export const hitTolerance = 0.1; 
+export const hitTolerance = 0.26; 
+export const hitOffset = 0.17;
 export const fallSpeedBase = 500; 
 export const songStartDelay = 2; 
 export const missCost = 5;

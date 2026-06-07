@@ -1,5 +1,5 @@
 import { initDB, getTracks, loadCustomTracks, saveCustomTrack, removeCustomTrack } from "../database.js";
-import { keyMap, fallSpeedBase, hitTolerance, songStartDelay, missCost, skipCost } from "./config.js";
+import { keyMap, fallSpeedBase, hitTolerance, songStartDelay, missCost, skipCost, hitOffset } from "./config.js";
 import { drawRect, drawLine, drawRoads,  } from "./render.js";
 import { synth, startAudio, notesMap, stopAudio, playNote, stopNote, getAudioTime, setNotesMap, resumeAudio, pauseAudio } from "./audio.js";
 
@@ -99,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setNotesMap(Number(track.notesTemplate));
 
         activeNotes = track.notes.map(n => {
-            const numTime = typeof n.time === 'string' ? Tone.Time(n.time).toSeconds() : Number(n.time);
+            const numTime = Number(n.time);
             const laneIndex = notesMap.indexOf(n.note) !== -1 ? notesMap.indexOf(n.note) : 0;
             const duration = n.duration ? Number(n.duration) : 0.2;
             
@@ -186,7 +186,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let noteFound = false;
             for (let i = 0; i < activeNotes.length; i++) {
                 let note = activeNotes[i];
-                if (!note.hit && !note.missed && note.lane === laneIndex && Math.abs(note.time - currentTime) <= hitTolerance) {
+                if (!note.hit && !note.missed && note.lane === laneIndex && Math.abs(note.time - (currentTime - hitOffset)) <= hitTolerance) {
                     note.hit = true; combo++; score += 10 + combo * 2; hp = Math.min(100, hp + 3); updateHUD();
                     noteFound = true; break; 
                 }
