@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <!-- ЭТОТ ТЕГ НАМЕРТВО ЗАПРЕЩАЕТ ЗУМ Н НА ТЕЛЕФОНАХ -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Musitechne - Main Menu</title>
+    <script type="module" src="js/menu.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Затемнение фона (теперь оно фиксировано намертво) -->
+    <div class="theme-overlay"></div>
+
+    <!-- ВЕСЬ КОНТЕНТ (СВЕРХУ ВНИЗ) -->
+    <main class="menu-layout">
+        
+        <!-- 1. Логотип -->
+        <div class="section-logo">
+            <img src="assets/images/MusiTechne_logo.png" alt="Musitechne Logo">
+        </div>
+
+        <!-- 2. Кнопка СТАРТ -->
+        <div class="section-start">
+            <button id="btn-start" class="start-btn">
+                <img src="assets/images/start.png" alt="Start Game">
+            </button>
+        </div>
+
+        <!-- 3. Диджей и Диалоговое окно -->
+        <div class="section-mascot">
+            <img src="assets/characters/djkin/djkin_hello.png" id="djkin-mascot" alt="DJ Kin">
+            
+            <div id="dialogue-box" class="dialogue-box">
+                <p id="dialogue-text"></p>
+                <span class="blinking-cursor">_</span>
+            </div>
+        </div>
+
+        <!-- 4. Кнопка смены темы (в самом низу) -->
+        <div class="section-theme">
+            <button id="theme-toggle" class="theme-btn">
+                <img src="assets/images/dark.png" id="theme-icon" alt="Toggle Theme">
+            </button>
+        </div>
+
+    </main>
+  <!-- ПАРАМЕТРЫ -->
+<div class="section-settings">
+    <button id="btn-settings" class="settings-btn">
+        Параметры
+    </button>
+</div>
+    
+
+    
+</body>
+</html>
