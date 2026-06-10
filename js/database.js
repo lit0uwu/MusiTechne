@@ -57,3 +57,13 @@ export async function getTracks() {
         return [{}];
     }
 }
+
+export function setStarsData(trackId, value){
+    console.log(`Save for: ${trackId} (${typeof trackId}) | Value: ${value} (${typeof value})`);
+    localStorage.setItem(trackId.toString(), value.toString());
+}
+
+export function getStarsData(trackId) {
+    const data = localStorage.getItem(trackId.toString());
+    return Number(data);
+}

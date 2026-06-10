@@ -1,4 +1,4 @@
-import { initDB, getTracks, loadCustomTracks, saveCustomTrack, removeCustomTrack } from "../database.js";
+import { initDB, getTracks, loadCustomTracks, saveCustomTrack, removeCustomTrack, getStarsData, setStarsData } from "../database.js";
 import { keyMap, fallSpeedBase, hitTolerance, songStartDelay, missCost, skipCost, hitOffset } from "./config.js";
 import { drawRect, drawLine, drawRoads,  } from "./render.js";
 import { synth, startAudio, notesMap, stopAudio, playNote, stopNote, getAudioTime, setNotesMap, resumeAudio, pauseAudio } from "./audio.js";
@@ -38,7 +38,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let score = 0; let combo = 0; let hp = 100;
     let isPlaying = false; 
     let currentTrack = null; let activeNotes = []; 
-    
+    let handledNotes = 0;
+
     let isRecording = false;
     let recordedNotes = [];
     let flyingNotes = [];
@@ -63,8 +64,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const trackElement = clone.firstElementChild;
             const title = clone.querySelector(".title");
             const removeBtn = clone.querySelector(".remove-btn");
+            const trackStars = getStarsData(track.id);
 
-            title.textContent = `⭐️ ${track.title}`;
+            if (!trackStars)
+                title.textContent = `⭐️ ${track.title} ☆☆☆`;
+            else {
+                console.log(`${track.title}: ${trackStars} stars`);
+                title.textContent = `⭐️ ${track.title} `;
+                for (let i = 0; i < 3; i++){
+                    if (trackStars > i) title.textContent += "★";
+                    else title.textContent += "☆";
+                }
+            }
+
             removeBtn.textContent = '❌';
             
             removeBtn.addEventListener('click', async (e) => {
@@ -75,7 +87,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             trackElement.addEventListener('click', () => {
                 startGame(track);
-                console.log("start");
             });
             levelList.appendChild(clone);
         });
@@ -88,11 +99,23 @@ document.addEventListener('DOMContentLoaded', () => {
             const removeBtn = clone.querySelector(".remove-btn");
             removeBtn.remove();
 
-            title.textContent = `${track.id}. ${track.title}`;
+            const trackStars = getStarsData(track.id);
+
+            console.log(`Track: ${track.id} (${typeof track.id}) | Stars: ${trackStars} (${typeof trackStars})`);
+
+            if (!trackStars)
+                title.textContent = `${track.id}. ${track.title} ☆☆☆`;
+            else {
+                console.log(`${track.title}: ${trackStars} stars`);
+                title.textContent = `${track.id}. ${track.title} `;
+                for (let i = 0; i < 3; i++){
+                    if (trackStars > i) title.textContent += "★";
+                    else title.textContent += "☆";
+                }
+            }
 
             trackElement.addEventListener('click', () => {
                 startGame(track);
-                console.log("start");
             });
             levelList.appendChild(clone);
         });
@@ -107,7 +130,8 @@ document.addEventListener('DOMContentLoaded', () => {
         await startAudio();
         currentTrack = track;
         score = 0; hp = 100; combo = 0; updateHUD();
-        
+        handledNotes = 0;
+
         isPerfectRun = true;
         setNotesMap(Number(track.notesTemplate));
 
@@ -241,7 +265,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 let note = activeNotes[i];
                 if (!note.hit && !note.missed && note.lane === laneIndex && Math.abs(note.time - (currentTime - hitOffset)) <= hitTolerance) {
                     note.hit = true; combo++; score += 10 + combo * 2; hp = Math.min(100, hp + 3); updateHUD();
-                    
+                    handledNotes++;
+
                     const soundClone = hitSoundEffect.cloneNode();
                     soundClone.play().catch(e => console.log("Audio play blocked."));
 
@@ -375,6 +400,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!isVictory) {
             loseSoundEffect.play().catch(e => console.log("Lose sound blocked or file missing."));
         }
+
+        const accuracyRatio = handledNotes / currentTrack.notes.length;
+
+        if (isVictory){
+            if (accuracyRatio > 0.6)
+                setStarsData(currentTrack.id, 2);
+            else if (accuracyRatio > 0.8 && hp > 80)
+                setStarsData(currentTrack.id, 3);
+            else setStarsData(currentTrack.id, 1);
+        }
+        else setStarsData(currentTrack.id, 0);
     }
 
     document.getElementById('btn-back-menu').onclick = () => window.location.href = 'index.html';
