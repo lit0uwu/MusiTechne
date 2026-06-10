@@ -86,7 +86,7 @@ body {
     border-radius: 8px;
     font-size: 16px;
     cursor: pointer;
-    margin-top: 20px;
+    margin-top: 12px;
 }
 
 /* --- ИГРОВОЙ ЭКРАН --- */
@@ -216,7 +216,11 @@ body {
     transform: scale(1.05);
 }
 
-/* Модификация инпутов, чтобы было красиво */
 input:focus {
     box-shadow: 0 0 15px #ffeb3b;
+}
+
+.result-stars {
+    font-size: 48px;
+    margin: 0px;
 }

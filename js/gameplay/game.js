@@ -70,11 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 title.textContent = `⭐️ ${track.title} ☆☆☆`;
             else {
                 console.log(`${track.title}: ${trackStars} stars`);
-                title.textContent = `⭐️ ${track.title} `;
-                for (let i = 0; i < 3; i++){
-                    if (trackStars > i) title.textContent += "★";
-                    else title.textContent += "☆";
-                }
+                title.textContent = `⭐️ ${track.title} ${getFinishedStarsString(trackStars)}`;
             }
 
             removeBtn.textContent = '❌';
@@ -107,11 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 title.textContent = `${track.id}. ${track.title} ☆☆☆`;
             else {
                 console.log(`${track.title}: ${trackStars} stars`);
-                title.textContent = `${track.id}. ${track.title} `;
-                for (let i = 0; i < 3; i++){
-                    if (trackStars > i) title.textContent += "★";
-                    else title.textContent += "☆";
-                }
+                title.textContent = `${track.id}. ${track.title} ${getFinishedStarsString(trackStars)}`;
             }
 
             trackElement.addEventListener('click', () => {
@@ -384,6 +376,15 @@ document.addEventListener('DOMContentLoaded', () => {
         })
     }
 
+    function getFinishedStarsString(stars){
+        let str = "";
+        for (let i = 0; i < 3; i++){
+            if (stars > i) str += "★";
+            else str += "☆";
+        }
+        return str;
+    }
+
     function endGame(isVictory) {
         switchScreen(screens.result);
         document.getElementById('result-title').textContent = isVictory ? "Уровень Пройден!" : "Провал...";
@@ -403,14 +404,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const accuracyRatio = handledNotes / currentTrack.notes.length;
 
+        let stars = 0;
         if (isVictory){
             if (accuracyRatio > 0.6)
-                setStarsData(currentTrack.id, 2);
+                stars = 2; 
             else if (accuracyRatio > 0.8 && hp > 80)
-                setStarsData(currentTrack.id, 3);
-            else setStarsData(currentTrack.id, 1);
+                stars = 3; 
+            else stars = 1; 
         }
-        else setStarsData(currentTrack.id, 0);
+        setStarsData(currentTrack.id, stars);
+
+        document.getElementById('result-stars').textContent = getFinishedStarsString(stars);
     }
 
     document.getElementById('btn-back-menu').onclick = () => window.location.href = 'index.html';
