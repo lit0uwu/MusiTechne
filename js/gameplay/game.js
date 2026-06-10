@@ -53,7 +53,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let isPlaying = false; 
     let isPaused = false;
     let currentTrack = null; let activeNotes = []; 
-    
+    let handledNotes = 0;
+
     let isRecording = false;
     let recordedNotes = [];
     let flyingNotes = [];
@@ -78,8 +79,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const trackElement = clone.firstElementChild;
             const title = clone.querySelector(".title");
             const removeBtn = clone.querySelector(".remove-btn");
+            const stars = getStarsData(track.id);
 
-            title.textContent = `⭐️ ${track.title}`;
+            title.textContent = `⭐️ ${track.title} ${getFinishedStarsString(stars ? stars : 0)}`;
+
             removeBtn.textContent = '❌';
             
             removeBtn.addEventListener('click', async (e) => {
@@ -103,7 +106,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const removeBtn = clone.querySelector(".remove-btn");
             removeBtn.remove();
 
-            title.textContent = `${track.id}. ${track.title}`;
+            const stars = getStarsData(track.id);
+            title.textContent = `${track.id}. ${track.title} ${getFinishedStarsString(stars ? stars : 0)}`;
 
             trackElement.addEventListener('click', () => {
                 startGame(track);
@@ -122,7 +126,8 @@ document.addEventListener('DOMContentLoaded', () => {
         await startAudio();
         currentTrack = track;
         score = 0; hp = 100; combo = 0; updateHUD();
-        
+        handledNotes = 0;
+
         isPerfectRun = true;
         isPaused = false;
         setNotesMap(Number(track.notesTemplate));
@@ -291,7 +296,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 let note = activeNotes[i];
                 if (!note.hit && !note.missed && note.lane === laneIndex && Math.abs(note.time - (currentTime - hitOffset)) <= hitTolerance) {
                     note.hit = true; combo++; score += 10 + combo * 2; hp = Math.min(100, hp + 3); updateHUD();
-                    
+                    handledNotes++;
+
                     const soundClone = hitSoundEffect.cloneNode();
                     soundClone.play().catch(e => console.log("Audio play blocked."));
 
@@ -430,10 +436,21 @@ document.addEventListener('DOMContentLoaded', () => {
         })
     }
 
+    function getFinishedStarsString(stars){
+        let str = "";
+        for (let i = 0; i < 3; i++){
+            if (stars > i) str += "★";
+            else str += "☆";
+        }
+        return str;
+    }
+
     function endGame(isVictory) {
         switchScreen(screens.result);
-        document.getElementById('result-title').textContent = isVictory ? "Уровень Пройден!" : "Провал...";
-        document.getElementById('result-title').style.color = isVictory ? "#4caf50" : "#ff5252";
+        const title = document.getElementById('result-title');
+        title.textContent = isVictory ? "Уровень Пройден!" : "Провал...";
+        title.style.color = isVictory ? "#4caf50" : "#ff5252";
+        title.style.textAlign = "center";
         document.getElementById('result-score').textContent = score;
         mascotResult.src = isVictory ? 'assets/characters/djkin/djkin_happy.png' : 'assets/characters/djkin/djkin_sad.png';
 
