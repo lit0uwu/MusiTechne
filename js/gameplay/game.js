@@ -406,10 +406,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let stars = 0;
         if (isVictory){
-            if (accuracyRatio > 0.6)
-                stars = 2; 
-            else if (accuracyRatio > 0.8 && hp > 80)
+            if (accuracyRatio > 0.8 && hp > 80)
                 stars = 3; 
+            else if (accuracyRatio > 0.6)
+                stars = 2; 
             else stars = 1; 
         }
         setStarsData(currentTrack.id, stars);
