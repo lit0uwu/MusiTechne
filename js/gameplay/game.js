@@ -1,4 +1,4 @@
-import { initDB, getTracks, loadCustomTracks, saveCustomTrack, removeCustomTrack, getStarsData, setStarsData } from "../database.js";
+import { initDB, getTracks, loadCustomTracks, saveCustomTrack, removeCustomTrack } from "../database.js";
 import { keyMap, fallSpeedBase, hitTolerance, songStartDelay, missCost, skipCost, hitOffset } from "./config.js";
 import { drawRect, drawLine, drawRoads,  } from "./render.js";
 import { synth, startAudio, notesMap, stopAudio, playNote, stopNote, getAudioTime, setNotesMap, resumeAudio, pauseAudio } from "./audio.js";
@@ -6,12 +6,12 @@ import { synth, startAudio, notesMap, stopAudio, playNote, stopNote, getAudioTim
 document.addEventListener('DOMContentLoaded', () => {
 
     // ФУЛ КОМБА
-    const perfectSoundEffect = new Audio('assets/sounds/sss-dmc-v.mp3');
+    const perfectSoundEffect = new Audio('assets/sounds/godlike.mp3');
     perfectSoundEffect.volume = 0.5;
     let isPerfectRun = true; 
 
     // Звук при поражении
-    const loseSoundEffect = new Audio('assets/sounds/cat-laugh-meme-1.mp3');
+    const loseSoundEffect = new Audio('assets/sounds/holyshit_3.mp3');
     loseSoundEffect.volume = 0.1;
 
     // Массив для хранения летящих очков
@@ -19,6 +19,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     //  прозрачность бокового свечения
     let sideGlowAlpha = 0;
+
+    // система рангов как в дмк
+    const dmcRanks = [
+        { minCombo: 0,  letter: "D", word: "Dirty",    color: "#a0a0a0", soundPath: 'assets/sounds/d.mp3' },
+        { minCombo: 1,  letter: "C", word: "Cruel",     color: "#4ea5d9", soundPath: 'assets/sounds/firstblood.mp3' },
+        { minCombo: 7, letter: "B", word: "Brutal",    color: "#44cf6c", soundPath: 'assets/sounds/double.mp3' },
+        { minCombo: 12, letter: "A", word: "Anarchic", color: "#e09f3e", soundPath: 'assets/sounds/triple.mp3' },
+        { minCombo: 16, letter: "S", word: "Savage",    color: "#f25c54", soundPath: 'assets/sounds/ultra.mp3' },
+        { minCombo: 20, letter: "SS", word: "Sadistic", color: "#d00000", soundPath: 'assets/sounds/monster.mp3' },
+        { minCombo: 30, letter: "SSS", word: "Sensational", color: "#ffeb3b", soundPath: 'assets/sounds/rampage.mp3' }
+    ];
+    let currentRankIndex = 0;
+    let rankScale = 1.0; 
+    // ------------------------------------------------------------
 
     const screens = {
         levelSelect: document.getElementById('screen-level-select'),
@@ -37,9 +51,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     let score = 0; let combo = 0; let hp = 100;
     let isPlaying = false; 
+    let isPaused = false;
     let currentTrack = null; let activeNotes = []; 
-    let handledNotes = 0;
-
+    
     let isRecording = false;
     let recordedNotes = [];
     let flyingNotes = [];
@@ -64,15 +78,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const trackElement = clone.firstElementChild;
             const title = clone.querySelector(".title");
             const removeBtn = clone.querySelector(".remove-btn");
-            const trackStars = getStarsData(track.id);
 
-            if (!trackStars)
-                title.textContent = `⭐️ ${track.title} ☆☆☆`;
-            else {
-                console.log(`${track.title}: ${trackStars} stars`);
-                title.textContent = `⭐️ ${track.title} ${getFinishedStarsString(trackStars)}`;
-            }
-
+            title.textContent = `⭐️ ${track.title}`;
             removeBtn.textContent = '❌';
             
             removeBtn.addEventListener('click', async (e) => {
@@ -83,6 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             trackElement.addEventListener('click', () => {
                 startGame(track);
+                console.log("start");
             });
             levelList.appendChild(clone);
         });
@@ -95,19 +103,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const removeBtn = clone.querySelector(".remove-btn");
             removeBtn.remove();
 
-            const trackStars = getStarsData(track.id);
-
-            console.log(`Track: ${track.id} (${typeof track.id}) | Stars: ${trackStars} (${typeof trackStars})`);
-
-            if (!trackStars)
-                title.textContent = `${track.id}. ${track.title} ☆☆☆`;
-            else {
-                console.log(`${track.title}: ${trackStars} stars`);
-                title.textContent = `${track.id}. ${track.title} ${getFinishedStarsString(trackStars)}`;
-            }
+            title.textContent = `${track.id}. ${track.title}`;
 
             trackElement.addEventListener('click', () => {
                 startGame(track);
+                console.log("start");
             });
             levelList.appendChild(clone);
         });
@@ -122,9 +122,9 @@ document.addEventListener('DOMContentLoaded', () => {
         await startAudio();
         currentTrack = track;
         score = 0; hp = 100; combo = 0; updateHUD();
-        handledNotes = 0;
-
+        
         isPerfectRun = true;
+        isPaused = false;
         setNotesMap(Number(track.notesTemplate));
 
         activeNotes = track.notes.map(n => {
@@ -146,6 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function gameLoop() {
+        if (isPaused) return;
         if (!isPlaying && !isRecording) return;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
@@ -180,6 +181,39 @@ document.addEventListener('DOMContentLoaded', () => {
                 isPlaying = false; 
                 endGame(false);
             }
+
+            // визуализация ранга
+            ctx.save();
+            const currentRank = dmcRanks[currentRankIndex];
+            const rankX = canvas.width - 80;
+            const rankY = 90;
+
+            if (rankScale > 1.0) rankScale -= 0.05;
+
+            ctx.translate(rankX, rankY);
+            ctx.scale(rankScale, rankScale);
+
+            // тень/свечение для буквы
+            ctx.shadowColor = currentRank.color;
+            ctx.shadowBlur = 15;
+
+            // буква ранга
+            ctx.font = "italic bold 56px 'Impact', Arial Black, sans-serif";
+            ctx.fillStyle = "#ffffff";
+            ctx.strokeStyle = currentRank.color;
+            ctx.lineWidth = 3;
+            ctx.textAlign = "center";
+            ctx.fillText(currentRank.letter, 0, 0);
+            ctx.strokeText(currentRank.letter, 0, 0);
+
+            // название ранга
+            ctx.shadowBlur = 5;
+            ctx.font = "bold 25px Arial";
+            ctx.fillStyle = currentRank.color;
+            ctx.fillText(currentRank.word.toUpperCase(), 0, 25);
+
+            ctx.restore();
+            // --------------------------------------------------
         }
         
         if (isRecording) {
@@ -200,7 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Отрисовка свечения по бокам экрана
+        // отрисовка свечения по бокам экрана
         if (isPlaying && sideGlowAlpha > 0) {
             ctx.save();
             const glowWidth = 80; 
@@ -243,7 +277,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function handleInputDown(laneIndex) {
-        if (gameActiveKeys[laneIndex] || (!isPlaying && !isRecording)) return;
+        if (gameActiveKeys[laneIndex] || (!isPlaying && !isRecording) || isPaused) return; // ИСПРАВЛЕНО: игнорируем ввод на паузе
         gameActiveKeys[laneIndex] = true;
 
         playNote(laneIndex);
@@ -257,8 +291,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 let note = activeNotes[i];
                 if (!note.hit && !note.missed && note.lane === laneIndex && Math.abs(note.time - (currentTime - hitOffset)) <= hitTolerance) {
                     note.hit = true; combo++; score += 10 + combo * 2; hp = Math.min(100, hp + 3); updateHUD();
-                    handledNotes++;
-
+                    
                     const soundClone = hitSoundEffect.cloneNode();
                     soundClone.play().catch(e => console.log("Audio play blocked."));
 
@@ -337,6 +370,27 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateHUD() {
         scoreDisplay.textContent = score; comboDisplay.textContent = `Combo: ${combo}`;
         hpBar.style.width = `${Math.max(0, hp)}%`; hpBar.style.background = hp < 30 ? '#ff5252' : '#4CAF50';
+
+        // --- ДИНАМИЧЕСКИЙ ПЕРЕРАСЧЕТ РАНГА С УНИКАЛЬНЫМИ ЗВУКАМИ (ДОБАВЛЕНИЕ) ---
+        let targetRankIndex = 0;
+        for (let i = dmcRanks.length - 1; i >= 0; i--) {
+            if (combo >= dmcRanks[i].minCombo) {
+                targetRankIndex = i;
+                break;
+            }
+        }
+
+        if (targetRankIndex !== currentRankIndex) {
+            if (targetRankIndex > currentRankIndex) {
+                const nextRank = dmcRanks[targetRankIndex];
+                const rankSound = new Audio(nextRank.soundPath);
+                rankSound.volume = 0.5;
+                rankSound.play().catch(e => console.log("Rank sound play blocked. Check file path: " + nextRank.soundPath));
+            }
+            currentRankIndex = targetRankIndex;
+            rankScale = 1.4;
+        }
+        // ---------------------------------------------------------------------
     }
 
     document.addEventListener('keydown', (e) => {
@@ -376,15 +430,6 @@ document.addEventListener('DOMContentLoaded', () => {
         })
     }
 
-    function getFinishedStarsString(stars){
-        let str = "";
-        for (let i = 0; i < 3; i++){
-            if (stars > i) str += "★";
-            else str += "☆";
-        }
-        return str;
-    }
-
     function endGame(isVictory) {
         switchScreen(screens.result);
         document.getElementById('result-title').textContent = isVictory ? "Уровень Пройден!" : "Провал...";
@@ -392,29 +437,23 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('result-score').textContent = score;
         mascotResult.src = isVictory ? 'assets/characters/djkin/djkin_happy.png' : 'assets/characters/djkin/djkin_sad.png';
 
-        if (isVictory && isPerfectRun) {
-            perfectSoundEffect.play().catch(e => console.log("Perfect sound blocked."));
-            document.getElementById('result-title').textContent = "💥 ИДЕАЛЬНО! FULL COMBO! 💥";
-            document.getElementById('result-title').style.color = "#ffeb3b"; 
+        // --- ДОБАВЛЕНИЕ СТИЛИСТИКИ ФИНАЛЬНОГО РАНГА В ИТОГИ (ДОБАВЛЕНИЕ) ---
+        if (isVictory) {
+            const finalRank = dmcRanks[currentRankIndex];
+            const resultTitle = document.getElementById('result-title');
+            
+            if (isPerfectRun) {
+                perfectSoundEffect.play().catch(e => console.log("Perfect sound blocked."));
+                resultTitle.innerHTML = `💥 ИДЕАЛЬНО! FULL COMBO! 💥<br><span style="font-size: 32px; color: ${finalRank.color}">РАНГ: ${finalRank.letter} (${finalRank.word})</span>`;
+            } else {
+                resultTitle.innerHTML = `Уровень Пройден!<br><span style="font-size: 28px; color: ${finalRank.color}">РАНГ: ${finalRank.letter}</span>`;
+            }
         }
+        // ------------------------------------------------------------------
         
         if (!isVictory) {
             loseSoundEffect.play().catch(e => console.log("Lose sound blocked or file missing."));
         }
-
-        const accuracyRatio = handledNotes / currentTrack.notes.length;
-
-        let stars = 0;
-        if (isVictory){
-            if (accuracyRatio > 0.6)
-                stars = 2; 
-            else if (accuracyRatio > 0.8 && hp > 80)
-                stars = 3; 
-            else stars = 1; 
-        }
-        setStarsData(currentTrack.id, stars);
-
-        document.getElementById('result-stars').textContent = getFinishedStarsString(stars);
     }
 
     document.getElementById('btn-back-menu').onclick = () => window.location.href = 'index.html';
@@ -431,6 +470,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!inputTitle.trim()) { alert("Введите название трека!"); return; }
         recordedNotes = []; flyingNotes = []; recordActiveKeys = {};
+        isPaused = false; // На всякий случай сбрасываем паузу при записи
         await startAudio();
 
         switchScreen(screens.game);
@@ -467,13 +507,16 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     document.getElementById("pauseBtn").addEventListener('click', () => {
+        isPaused = true;
         switchScreen(screens.pause);
         pauseAudio();
     });
     
     document.getElementById("resume-btn").addEventListener('click', () => {
+        isPaused = false;
         switchScreen(screens.game);
         resumeAudio();
+        requestAnimationFrame(gameLoop);
     });
     
     document.getElementById("replay-btn").addEventListener('click', async () => {
